@@ -436,7 +436,7 @@ body::before {
       <h1>Perk Tree</h1>
     </div>
     <div class="topbar-right">
-      <nav class="tabs" aria-label="Choisir un arbre">
+      <nav class="tabs" aria-label="Choose a perk tree">
         <button class="tree-tab active" data-tree="2">ID2</button>
         <button class="tree-tab" data-tree="3">ID3</button>
         <button class="tree-tab" data-tree="6">ID6</button>
@@ -448,10 +448,10 @@ body::before {
       <div class="rotation-status" aria-live="polite">
         <span class="rotation-current">
           <span class="live-dot"></span>
-          Actif : <strong id="activeTreeLabel">—</strong>
+          Active: <strong id="activeTreeLabel">—</strong>
         </span>
         <span class="rotation-separator">•</span>
-        <span id="selectedTreeSchedule">Calcul de la rotation…</span>
+        <span id="selectedTreeSchedule">Calculating rotation…</span>
         <span class="rotation-countdown" id="rotationCountdown"></span>
       </div>
     </div>
@@ -459,7 +459,7 @@ body::before {
 
   <main class="main">
     <section class="tree-shell">
-      <div class="tree-stage" id="treeStage" aria-label="Arbre de compétences"></div>
+      <div class="tree-stage" id="treeStage" aria-label="Perk tree"></div>
     </section>
   </main>
 </div>
@@ -486,10 +486,10 @@ let currentTree = 2;
 let activeNode = null;
 
 // ================================================================
-// ROTATION AUTOMATIQUE DES PERK TREES
-// Référence MongoDB : 24/08/2026 05:00 UTC = ID3
-// Rotation : 2 → 3 → 6 → 0 → 5 → 1 → 4 → 2 ...
-// Période : 14 jours
+// AUTOMATIC PERK TREE ROTATION
+// MongoDB reference: 24/08/2026 05:00 UTC = ID3
+// Rotation: 2 → 3 → 6 → 0 → 5 → 1 → 4 → 2 ...
+// Period: 14 days
 // ================================================================
 const ROTATION_ORDER = [2, 3, 6, 0, 5, 1, 4];
 const ROTATION_ANCHOR_TREE = 3;
@@ -575,13 +575,13 @@ function updateRotationDisplay() {
 
   if (currentTree === state.activeTree) {
     selectedTreeSchedule.textContent =
-      `ID${currentTree} est actif · prochain changement : ${formatLocalDateTime(state.nextChange)}`;
+      `ID${currentTree} is active · next change: ${formatLocalDateTime(state.nextChange)}`;
     rotationCountdown.textContent =
       `(${formatCountdown(state.nextChange - now)})`;
   } else {
     const nextActivation = nextActivationForTree(currentTree, now);
     selectedTreeSchedule.textContent =
-      `ID${currentTree} : ${formatLocalDateTime(nextActivation)}`;
+      `ID${currentTree} next active: ${formatLocalDateTime(nextActivation)}`;
     rotationCountdown.textContent =
       `(${formatCountdown(nextActivation - now)})`;
   }
