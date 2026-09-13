@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deceit — Perk Tree</title>
+<style>
+:root {
+  --bg:#060b0e;
+  --panel:#0b1216;
+  --line:#617278;
+  --cyan:#67c7c7;
+  --cyan2:#8ae1dc;
+  --terror:#8b2836;
+  --terror-hi:#d04a5d;
+  --text:#edf4f4;
+  --muted:#91a3a8;
+  --node:54px;
+}
+* { box-sizing:border-box; }
+html, body { width:100%; height:100%; margin:0; }
+body {
+  overflow:hidden;
+  font-family:Inter, "Segoe UI", Arial, sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(circle at 20% 50%, rgba(88,28,5,.26), transparent 35%),
+    radial-gradient(circle at 83% 42%, rgba(42,55,58,.24), transparent 40%),
+    linear-gradient(120deg,#110a07 0%,#0a0e10 53%,#090f12 100%);
+}
+body::before {
+  content:"";
+  position:fixed; inset:0; pointer-events:none;
+  background-image:
+    radial-gradient(circle,rgba(255,255,255,.15) 0 1px,transparent 1.4px);
+  background-size:91px 91px;
+  opacity:.14;
+}
+.app {
+  height:100vh;
+  display:grid;
+  grid-template-rows:86px 1fr;
+  padding:18px 28px 18px;
+}
+.topbar {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:24px;
+  max-width:1500px;
+  width:100%;
+  margin:0 auto;
+}
+.brand {
+  display:flex;
+  align-items:baseline;
+  gap:16px;
+  white-space:nowrap;
+}
+.brand h1 {
+  margin:0;
+  font-size:30px;
+  font-weight:300;
+  letter-spacing:.24em;
+  text-transform:uppercase;
+}
+.brand .subtitle {
+  color:var(--muted);
+  font-size:13px;
+  letter-spacing:.12em;
+}
+.tabs {
+  display:flex;
+  gap:8px;
+  background:rgba(5,11,14,.72);
+  border:1px solid rgba(111,144,151,.24);
+  border-radius:12px;
+  padding:6px;
+  box-shadow:0 15px 50px rgba(0,0,0,.28);
+}
+.tree-tab {
+  border:1px solid transparent;
+  background:transparent;
+  color:#8fa1a5;
+  min-width:72px;
+  height:42px;
+  border-radius:8px;
+  font-weight:700;
+  letter-spacing:.08em;
+  cursor:pointer;
+  transition:.16s ease;
+}
+
+.topbar-right {
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:6px;
+}
+.rotation-status {
+  min-height:18px;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  padding:0 8px;
+  color:#7f9499;
+  font-size:11px;
+  letter-spacing:.025em;
+  white-space:nowrap;
+}
+.rotation-current {
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  color:#91aaaE;
+}
+.rotation-current strong {
+  color:#d9f4f2;
+  font-weight:750;
+}
+.live-dot {
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#69d7c8;
+  box-shadow:0 0 8px rgba(105,215,200,.75);
+}
+.rotation-separator {
+  color:#456069;
+}
+.rotation-countdown {
+  color:#b9cecf;
+  font-variant-numeric:tabular-nums;
+  font-weight:650;
+}
+.tree-tab.live-tree {
+  position:relative;
+}
+.tree-tab.live-tree::after {
+  content:"";
+  position:absolute;
+  top:5px;
+  right:6px;
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:#69d7c8;
+  box-shadow:0 0 7px rgba(105,215,200,.85);
+}
+
+.tree-tab:hover {
+  color:#e8ffff;
+  background:rgba(86,164,166,.10);
+}
+.tree-tab.active {
+  color:#eaffff;
+  border-color:rgba(109,220,215,.54);
+  background:linear-gradient(180deg,rgba(68,171,172,.25),rgba(33,98,102,.18));
+  box-shadow:0 0 20px rgba(65,204,196,.12) inset;
+}
+.main {
+  min-height:0;
+  display:grid;
+  grid-template-columns:1fr;
+  place-items:center;
+  max-width:1500px;
+  width:100%;
+  margin:0 auto;
+}
+.side {
+  align-self:stretch;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+.info-card {
+  max-width:330px;
+  padding:22px 22px 20px;
+  border:1px solid rgba(122,150,156,.20);
+  border-radius:14px;
+  background:rgba(7,14,17,.58);
+  backdrop-filter:blur(10px);
+  box-shadow:0 20px 70px rgba(0,0,0,.20);
+}
+.info-card.right { margin-left:auto; }
+.kicker {
+  text-transform:uppercase;
+  color:#75c6c3;
+  letter-spacing:.18em;
+  font-size:11px;
+  font-weight:800;
+}
+.current-title {
+  margin:7px 0 8px;
+  font-size:31px;
+  font-weight:350;
+}
+.info-card p {
+  color:#9badb1;
+  font-size:13px;
+  line-height:1.55;
+  margin:0;
+}
+.legend {
+  display:grid;
+  gap:10px;
+  margin-top:18px;
+}
+.legend-row {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:#aebdc0;
+  font-size:12px;
+}
+.dot {
+  width:10px;height:10px;border-radius:50%;
+  box-shadow:0 0 10px currentColor;
+}
+.dot.innocent { color:#67c7c7;background:#67c7c7; }
+.dot.terror { color:#b44052;background:#b44052; }
+.extra-warning {
+  margin-top:16px;
+  padding:10px 11px;
+  border-radius:8px;
+  border:1px solid rgba(198,158,80,.25);
+  background:rgba(151,106,22,.08);
+  color:#c8b37f;
+  font-size:11px;
+  line-height:1.45;
+  display:none;
+}
+.extra-warning.visible { display:block; }
+
+.tree-shell {
+  width:600px;
+  height:calc(100vh - 130px);
+  max-height:880px;
+  min-height:760px;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.tree-stage {
+  position:relative;
+  width:560px;
+  height:850px;
+  transform-origin:center center;
+  overflow:visible;
+  background:none !important;
+  border:none;
+  box-shadow:none;
+  filter:none;
+}
+.tree-stage::before {
+  content:none;
+}
+
+.tree-links {
+  position:absolute;
+  inset:0;
+  width:560px;
+  height:850px;
+  overflow:visible;
+  pointer-events:none;
+  z-index:1;
+}
+.tree-links line {
+  stroke:#71858a;
+  stroke-width:3.2;
+  stroke-opacity:.72;
+  stroke-linecap:round;
+  vector-effect:non-scaling-stroke;
+}
+
+.perk-node {
+  position:absolute;
+  width:var(--node);
+  height:var(--node);
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  border:2px solid #52777c;
+  background:#071417;
+  padding:3px;
+  cursor:help;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:
+    0 0 0 2px rgba(0,0,0,.45),
+    0 5px 14px rgba(0,0,0,.42);
+  transition:transform .14s ease, border-color .14s ease,
+             box-shadow .14s ease, filter .14s ease;
+  z-index:4;
+}
+.perk-node.terror {
+  border-color:#6e4650;
+}
+.perk-node img {
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  border-radius:50%;
+  pointer-events:none;
+  display:block;
+}
+.perk-node .fallback {
+  display:none;
+  width:100%;height:100%;
+  align-items:center;justify-content:center;
+  font-size:10px;font-weight:800;color:#d6e8e8;
+  text-align:center;
+}
+.perk-node:hover, .perk-node:focus-visible {
+  transform:translate(-50%,-50%) scale(1.12);
+  border-color:#7ff0e7;
+  filter:brightness(1.14);
+  box-shadow:
+    0 0 0 2px rgba(5,10,12,.75),
+    0 0 22px rgba(93,224,216,.42);
+  z-index:15;
+  outline:none;
+}
+.perk-node.terror:hover, .perk-node.terror:focus-visible {
+  border-color:#e05265;
+  box-shadow:
+    0 0 0 2px rgba(5,10,12,.75),
+    0 0 22px rgba(216,66,88,.38);
+}
+.perk-id {
+  position:absolute;
+  right:-7px;
+  bottom:-5px;
+  min-width:19px;
+  height:19px;
+  padding:0 4px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#0e1b1e;
+  border:1px solid rgba(142,190,194,.45);
+  color:#a7c8cb;
+  font-size:9px;
+  font-weight:800;
+  z-index:2;
+  pointer-events:none;
+}
+.tooltip {
+  position:fixed;
+  z-index:1000;
+  width:310px;
+  padding:14px 15px 13px;
+  border-radius:10px;
+  border:1px solid rgba(129,185,188,.38);
+  background:rgba(5,12,15,.96);
+  box-shadow:0 18px 55px rgba(0,0,0,.50);
+  pointer-events:none;
+  opacity:0;
+  transform:translateY(5px);
+  transition:opacity .10s ease, transform .10s ease;
+}
+.tooltip.visible { opacity:1; transform:translateY(0); }
+.tooltip.terror { border-color:rgba(196,76,94,.48); }
+.tip-head {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:6px;
+}
+.tip-name {
+  font-size:15px;
+  font-weight:750;
+  letter-spacing:.01em;
+}
+.tip-role {
+  text-transform:uppercase;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.12em;
+  color:#78d3ce;
+}
+.tooltip.terror .tip-role { color:#d55a6b; }
+.tip-desc {
+  margin:0;
+  font-size:12px;
+  color:#b7c4c7;
+  line-height:1.45;
+}
+.tip-id {
+  margin-top:9px;
+  color:#688187;
+  font-size:10px;
+}
+.helper {
+  color:#6f8388;
+  font-size:11px;
+  line-height:1.55;
+}
+.key {
+  display:inline-flex;
+  min-width:22px;
+  height:20px;
+  padding:0 6px;
+  align-items:center;
+  justify-content:center;
+  border-radius:5px;
+  border:1px solid rgba(126,156,162,.30);
+  background:#0a1417;
+  color:#a9bbbf;
+  font-size:10px;
+  font-weight:700;
+}
+@media (max-height:930px) {
+  .tree-stage { transform:scale(.91); }
+  .tree-shell { max-height:790px; min-height:720px; }
+}
+@media (max-width:1050px) {
+  body { overflow:auto; }
+  .app { height:auto; min-height:100vh; }
+  .tree-shell { margin:0 auto; }
+  .topbar { flex-direction:column; height:auto; }
+  .topbar-right { width:100%; }
+  .rotation-status { justify-content:center; flex-wrap:wrap; white-space:normal; }
+  .app { grid-template-rows:auto 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <h1>Perk Tree</h1>
+    </div>
+    <div class="topbar-right">
+      <nav class="tabs" aria-label="Choisir un arbre">
+        <button class="tree-tab active" data-tree="2">ID2</button>
+        <button class="tree-tab" data-tree="3">ID3</button>
+        <button class="tree-tab" data-tree="6">ID6</button>
+        <button class="tree-tab" data-tree="0">ID0</button>
+        <button class="tree-tab" data-tree="5">ID5</button>
+        <button class="tree-tab" data-tree="1">ID1</button>
+        <button class="tree-tab" data-tree="4">ID4</button>
+      </nav>
+      <div class="rotation-status" aria-live="polite">
+        <span class="rotation-current">
+          <span class="live-dot"></span>
+          Actif : <strong id="activeTreeLabel">—</strong>
+        </span>
+        <span class="rotation-separator">•</span>
+        <span id="selectedTreeSchedule">Calcul de la rotation…</span>
+        <span class="rotation-countdown" id="rotationCountdown"></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="tree-shell">
+      <div class="tree-stage" id="treeStage" aria-label="Arbre de compétences"></div>
+    </section>
+  </main>
+</div>
+
+<div class="tooltip" id="tooltip">
+  <div class="tip-head">
+    <div class="tip-name" id="tipName"></div>
+    <div class="tip-role" id="tipRole"></div>
+  </div>
+  <p class="tip-desc" id="tipDesc"></p>
+  <div class="tip-id" id="tipId"></div>
+</div>
+
+<script>
+const TREES = {"0":{"background":"","items":[{"id":38,"name":"Loaded","description":"Start with a full ammo clip in your pistol.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/2/2b/Loaded.png/revision/latest?cb=20190521163630","role":"Innocent","x":279.91,"y":68.47},{"id":55,"name":"Mind Your Step","description":"Get an outline on traps when stood near them in human form.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/d/d9/Mindyourstep.png/revision/latest?cb=20190521163749","role":"Terror","x":225.25,"y":127.89},{"id":56,"name":"Surprise","description":"Get a burst of movement speed when coming out of a vent.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/9/9c/Surprise.png/revision/latest?cb=20190521164728","role":"Terror","x":334.58,"y":127.89},{"id":21,"name":"Bounce Back","description":"Regenerate health slowly over time.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/1/1a/Bounceback.png/revision/latest?cb=20190521162814","role":"Innocent","x":279.91,"y":187.31},{"id":40,"name":"Turbo Trap","description":"Place traps faster.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/3/3a/Turbotrap.png/revision/latest?cb=20190521164834","role":"Innocent","x":225.25,"y":246.73},{"id":41,"name":"Sleight of Hand","description":"Reload weapons faster.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/7/78/Sleightofhand.png/revision/latest?cb=20190521164538","role":"Innocent","x":334.58,"y":246.73},{"id":70,"name":"Rage Refund","description":"Get a slice of Terror strength if someone you executed gets antidoted.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/4/45/Ragerefund.png/revision/latest?cb=20190521164247","role":"Terror","x":279.91,"y":306.16},{"id":23,"name":"Come Prepared","description":"Spawn with 100% armour.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/a/ac/Comeprepared.png/revision/latest?cb=20190521162937","role":"Innocent","x":171.77,"y":365.58},{"id":43,"name":"Head Start","description":"Each time you respawn you’ll have 25% armour.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/a/a6/Headstart.png/revision/latest?cb=20190521163322","role":"Innocent","x":279.91,"y":365.58},{"id":1,"name":"Say Cheese","description":"Cameras provide an extra flash.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/2/28/Saycheese.png/revision/latest?cb=20190521164307","role":"Innocent","x":389.25,"y":365.58},{"id":14,"name":"Stealth","description":"Transform in and out of Terror form quieter.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/1/19/Stealth.png/revision/latest?cb=20190521164615","role":"Terror","x":171.77,"y":425.0},{"id":60,"name":"Quiet Quencher","description":"Make less noise when you’re drinking from blood bags.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/c/c1/Quietquencher.png/revision/latest?cb=20190521164230","role":"Terror","x":279.91,"y":425.0},{"id":64,"name":"Step Up","description":"Other player’s footsteps are louder to you in Terror form.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/7/7b/Stepup.png/revision/latest?cb=20190521164645","role":"Terror","x":389.25,"y":425.0},{"id":42,"name":"Good Lighting","description":"Cameras are 10% more effective against Terrors.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/4/48/Goodlighting.png/revision/latest?cb=20190521163302","role":"Innocent","x":225.25,"y":484.42},{"id":50,"name":"Triggered","description":"Increased trap trigger and blast radius.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/e/ef/Triggered.png/revision/latest?cb=20190521164804","role":"Innocent","x":334.58,"y":484.42},{"id":35,"name":"Skedaddle","description":"Move 35% faster (decaying over 3 seconds) after downing Terrors.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/4/43/Skedaddle.png/revision/latest?cb=20190521164459","role":"Innocent","x":117.1,"y":543.84},{"id":11,"name":"Panic!","description":"15% increased movement speed when in gas and when the exit is open.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/4/4c/Panic.png/revision/latest?cb=20190521163806","role":"Innocent","x":225.25,"y":543.84},{"id":39,"name":"Eye Spy","description":"You can see nametags when close to people in the dark.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/2/27/Eyespy.png/revision/latest?cb=20190521163145","role":"Innocent","x":334.58,"y":543.84},{"id":5,"name":"Backstabber","description":"Deal 10% more damage from behind targets.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/5/52/Backstabber.png/revision/latest?cb=20190521162635","role":"Innocent","x":443.92,"y":543.84},{"id":24,"name":"Bullet Time","description":"Take 25% less damage in Terror form.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/f/f0/Bullettime.png/revision/latest?cb=20190521162922","role":"Terror","x":225.25,"y":603.27},{"id":72,"name":"Impatient","description":"Respawn faster when downed in Terror Form.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/4/4b/Impatient.png/revision/latest?cb=20190521163401","role":"Terror","x":334.58,"y":603.27},{"id":19,"name":"Scavenger","description":"You are more likely to find more ammo when picking it up.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/1/18/Scavenger.png/revision/latest?cb=20190521164322","role":"Innocent","x":171.77,"y":662.69},{"id":33,"name":"Hoarder","description":"Consumable items on the floor are highlighted from further away.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/f/fe/Hoarder.png/revision/latest?cb=20190521163343","role":"Innocent","x":279.91,"y":662.69},{"id":48,"name":"Magnetic Mag","description":"Bullets have a 20% chance of returning on hitting a target.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/5/53/Magneticmag.png/revision/latest?cb=20190521163720","role":"Innocent","x":389.25,"y":662.69},{"id":67,"name":"Appetiser","description":"Start the Game with Half a Slice of Terror Strength.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/c/c0/Appetiser.png/revision/latest?cb=20190521162604","role":"Terror","x":171.77,"y":722.11},{"id":65,"name":"Acquired Taste","description":"After drinking a blood bag you will briefly be shown other available blood bags.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/d/dc/Acquiredtaste.png/revision/latest?cb=20190521162437","role":"Terror","x":279.91,"y":722.11},{"id":59,"name":"Life Leech","description":"Get full Terror health when you execute someone.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/2/20/Lifeleech.png/revision/latest?cb=20190521163613","role":"Terror","x":389.25,"y":722.11},{"id":54,"name":"Detective","description":"When looking at a taken blood bag you can see when it was drank by an infected.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/7/7f/Detective.png/revision/latest?cb=20190521163017","role":"Innocent","x":226.43,"y":781.53},{"id":8,"name":"Interrogate","description":"If you’re involved in a vote that passes there is a chance that you will be told if they were infected. Only one person can be informed per passing vote.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/6/69/Interrogate.png/revision/latest?cb=20190521163459","role":"Innocent","x":334.58,"y":780.34}],"extras":[],"rowCounts":[1,2,1,2,1,3,3,2,4,2,3,3,2]},"1":{"background":"","items":[{"id":33,"name":"Hoarder","description":"Consumable items on the floor are highlighted from further away.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/f/fe/Hoarder.png/revision/latest?cb=20190521163343","role":"Innocent","x":294.31,"y":68.87},{"id":55,"name":"Mind Your Step","description":"Get an outline on traps when stood near them in human form.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/d/d9/Mindyourstep.png/revision/latest?cb=20190521163749","role":"Terror","x":239.64,"y":128.29},{"id":61,"name":"Slowly does it","description":"Traps require you to be closer to them before they’re triggered.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/9/96/Slowlydoesit.png/revision/latest?cb=20190521164557","role":"Terror","x":348.98,"y":128.29},{"id":49,"name":"Trust Issues","description":"When you pull a lever it takes 5 seconds before the objective becomes active giving you time to get to it first.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/b/b3/Trustissues.png/revision/latest?cb=20190521164819","role":"Innocent","x":184.97,"y":187.71},{"id":50,"name":"Triggered","description":"Increased trap trigger and blast radius.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/e/ef/Triggered.png/revision/latest?cb=20190521164804","role":"Innocent","x":294.31,"y":187.71},{"id":42,"name":"Good Lighting","description":"Cameras are 10% more effective against Terrors.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/4/48/Goodlighting.png/revision/latest?cb=20190521163302","role":"Innocent","x":402.46,"y":187.71},{"id":7,"name":"Frisk","description":"You can see downed people’s items in their nametag.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/d/d3/Frisk.png/revision/latest?cb=20191116224326","role":"Innocent","x":239.64,"y":247.13},{"id":35,"name":"Skedaddle","description":"Move 35% faster (decaying over 3 seconds) after downing Terrors.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/4/43/Skedaddle.png/revision/latest?cb=20190521164459","role":"Innocent","x":348.98,"y":247.13},{"id":70,"name":"Rage Refund","description":"Get a slice of Terror strength if someone you executed gets antidoted.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/4/45/Ragerefund.png/revision/latest?cb=20190521164247","role":"Terror","x":239.64,"y":306.55},{"id":72,"name":"Impatient","description":"Respawn faster when downed in Terror Form.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/4/4b/Impatient.png/revision/latest?cb=20190521163401","role":"Terror","x":348.98,"y":306.55},{"id":11,"name":"Panic!","description":"15% increased movement speed when in gas and when the exit is open.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/4/4c/Panic.png/revision/latest?cb=20190521163806","role":"Innocent","x":294.31,"y":365.97},{"id":65,"name":"Acquired Taste","description":"After drinking a blood bag you will briefly be shown other available blood bags.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/d/dc/Acquiredtaste.png/revision/latest?cb=20190521162437","role":"Terror","x":239.64,"y":425.4},{"id":60,"name":"Quiet Quencher","description":"Make less noise when you’re drinking from blood bags.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/c/c1/Quietquencher.png/revision/latest?cb=20190521164230","role":"Terror","x":348.98,"y":425.4},{"id":21,"name":"Bounce Back","description":"Regenerate health slowly over time.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/1/1a/Bounceback.png/revision/latest?cb=20190521162814","role":"Innocent","x":184.97,"y":484.82},{"id":37,"name":"Critical Thinking","description":"Guns deal 25% extra damage when hitting targets in the head.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/f/f3/Criticalthinking.png/revision/latest?cb=20190521162959","role":"Innocent","x":294.31,"y":484.82},{"id":18,"name":"Evasion","description":"Trackers last 50% less time on you.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/d/d2/Evasion.png/revision/latest?cb=20190521163039","role":"Innocent","x":403.65,"y":484.82},{"id":38,"name":"Loaded","description":"Start with a full ammo clip in your pistol.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/2/2b/Loaded.png/revision/latest?cb=20190521163630","role":"Innocent","x":130.31,"y":544.24},{"id":41,"name":"Sleight of Hand","description":"Reload weapons faster.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/7/78/Sleightofhand.png/revision/latest?cb=20190521164538","role":"Innocent","x":239.64,"y":544.24},{"id":26,"name":"Surveillance","description":"If you revive someone you can see their position for 15 seconds.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/f/f7/Surveillance.png/revision/latest?cb=20190521164743","role":"Innocent","x":347.79,"y":544.24},{"id":23,"name":"Come Prepared","description":"Spawn with 100% armour.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/a/ac/Comeprepared.png/revision/latest?cb=20190521162937","role":"Innocent","x":457.13,"y":544.24},{"id":68,"name":"Fully Alert","description":"At full blood when the lights are on you can see the innocents.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/c/c9/Fullyalert.png/revision/latest?cb=20190521163225","role":"Terror","x":184.97,"y":603.66},{"id":29,"name":"Sixth Sense","description":"At night all accessible blood bags are highlighted to you.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/6/60/Sixthsense.png/revision/latest?cb=20190521164442","role":"Terror","x":294.31,"y":603.66},{"id":71,"name":"Last Laugh","description":"When enraged and in Terror form you can see all innocents.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/5/52/Lastlaugh.png/revision/latest?cb=20190521163519","role":"Terror","x":403.65,"y":603.66},{"id":3,"name":"Bright Eyed","description":"See slightly better in the dark without using light sources.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/3/3a/Brighteyed.png/revision/latest?cb=20190521162901","role":"Innocent","x":239.64,"y":663.08},{"id":53,"name":"Please Sir","description":"After completing an objective you will briefly be shown the position of available levers to activate.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/3/3d/Pleasesir.png/revision/latest?cb=20190521164211","role":"Innocent","x":348.98,"y":663.08},{"id":56,"name":"Surprise","description":"Get a burst of movement speed when coming out of a vent.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/9/9c/Surprise.png/revision/latest?cb=20190521164728","role":"Terror","x":294.31,"y":722.5},{"id":6,"name":"Unsung Hero","description":"You will be notified of who took an objective that you’ve activated.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/6/61/Unsunghero.png/revision/latest?cb=20190521164851","role":"Innocent","x":184.97,"y":781.93},{"id":2,"name":"Foresight","description":"Active objectives that are within 15 meters of you are waypointed, even if you didn’t help activate them.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/e/e5/Foresight.png/revision/latest?cb=20190521163205","role":"Innocent","x":294.31,"y":781.93},{"id":54,"name":"Detective","description":"When looking at a taken blood bag you can see when it was drank by an infected.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/7/7f/Detective.png/revision/latest?cb=20190521163017","role":"Innocent","x":403.65,"y":781.53}],"extras":[],"rowCounts":[1,2,3,2,2,1,2,3,4,3,2,1,3]},"2":{"background":"","items":[{"id":33,"name":"Hoarder","description":"Consumable items on the floor are highlighted from further away.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/f/fe/Hoarder.png/revision/latest?cb=20190521163343","role":"Innocent","x":279.82,"y":69.0},{"id":14,"name":"Stealth","description":"Transform in and out of Terror form quieter.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/1/19/Stealth.png/revision/latest?cb=20190521164615","role":"Terror","x":170.62,"y":128.35},{"id":67,"name":"Appetiser","description":"Start the Game with Half a Slice of Terror Strength.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/c/c0/Appetiser.png/revision/latest?cb=20190521162604","role":"Terror","x":279.82,"y":128.35},{"id":64,"name":"Step Up","description":"Other player’s footsteps are louder to you in Terror form.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/7/7b/Stepup.png/revision/latest?cb=20190521164645","role":"Terror","x":387.84,"y":128.35},{"id":4,"name":"Adrenaline","description":"Move 10% faster in the dark.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/e/e3/Adrenaline.png/revision/latest?cb=20190521162534","role":"Innocent","x":225.22,"y":187.7},{"id":21,"name":"Bounce Back","description":"Regenerate health slowly over time.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/1/1a/Bounceback.png/revision/latest?cb=20190521162814","role":"Innocent","x":334.42,"y":187.7},{"id":19,"name":"Scavenger","description":"You are more likely to find more ammo when picking it up.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/1/18/Scavenger.png/revision/latest?cb=20190521164322","role":"Innocent","x":279.82,"y":247.05},{"id":30,"name":"Every Last Drop","description":"If you respawn in human form you will lose only ½ a slice of Terror strength.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/2/2f/Everylastdrop.png/revision/latest?cb=20190521163114","role":"Terror","x":225.22,"y":306.4},{"id":29,"name":"Sixth Sense","description":"At night all accessible blood bags are highlighted to you.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/6/60/Sixthsense.png/revision/latest?cb=20190521164442","role":"Terror","x":333.24,"y":306.4},{"id":17,"name":"Slasher","description":"Increased melee damage with the knife.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/9/9a/Slasher.png/revision/latest?cb=20190521164517","role":"Innocent","x":170.62,"y":365.75},{"id":48,"name":"Magnetic Mag","description":"Bullets have a 20% chance of returning on hitting a target.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/5/53/Magneticmag.png/revision/latest?cb=20190521163720","role":"Innocent","x":279.82,"y":365.75},{"id":5,"name":"Backstabber","description":"Deal 10% more damage from behind targets.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/5/52/Backstabber.png/revision/latest?cb=20190521162635","role":"Innocent","x":387.84,"y":365.75},{"id":55,"name":"Mind Your Step","description":"Get an outline on traps when stood near them in human form.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/d/d9/Mindyourstep.png/revision/latest?cb=20190521163749","role":"Terror","x":225.22,"y":425.1},{"id":61,"name":"Slowly does it","description":"Traps require you to be closer to them before they’re triggered.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/9/96/Slowlydoesit.png/revision/latest?cb=20190521164557","role":"Terror","x":333.24,"y":425.1},{"id":18,"name":"Evasion","description":"Trackers last 50% less time on you.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/d/d2/Evasion.png/revision/latest?cb=20190521163039","role":"Innocent","x":225.22,"y":484.45},{"id":50,"name":"Triggered","description":"Increased trap trigger and blast radius.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/e/ef/Triggered.png/revision/latest?cb=20190521164804","role":"Innocent","x":334.42,"y":484.45},{"id":23,"name":"Come Prepared","description":"Spawn with 100% armour.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/a/ac/Comeprepared.png/revision/latest?cb=20190521162937","role":"Innocent","x":170.62,"y":543.8},{"id":40,"name":"Turbo Trap","description":"Place traps faster.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/3/3a/Turbotrap.png/revision/latest?cb=20190521164834","role":"Innocent","x":279.82,"y":543.8},{"id":43,"name":"Head Start","description":"Each time you respawn you’ll have 25% armour.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/a/a6/Headstart.png/revision/latest?cb=20190521163322","role":"Innocent","x":387.84,"y":543.8},{"id":32,"name":"Fun Sponge","description":"You gain half a slice of Terror strength from each objective you deactivate.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/3/35/Funsponge.png/revision/latest?cb=20190521163244","role":"Terror","x":225.22,"y":603.15},{"id":70,"name":"Rage Refund","description":"Get a slice of Terror strength if someone you executed gets antidoted.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/4/45/Ragerefund.png/revision/latest?cb=20190521164247","role":"Terror","x":333.24,"y":603.15},{"id":1,"name":"Say Cheese","description":"Cameras provide an extra flash.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/2/28/Saycheese.png/revision/latest?cb=20190521164307","role":"Innocent","x":170.62,"y":662.5},{"id":10,"name":"Second Chance","description":"When antidoting someone, nearby Terrors will become downed.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/0/03/Secondchance.png/revision/latest?cb=20190521164338","role":"Innocent","x":279.82,"y":662.5},{"id":3,"name":"Bright Eyed","description":"See slightly better in the dark without using light sources.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/3/3a/Brighteyed.png/revision/latest?cb=20190521162901","role":"Innocent","x":387.84,"y":662.5},{"id":56,"name":"Surprise","description":"Get a burst of movement speed when coming out of a vent.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/9/9c/Surprise.png/revision/latest?cb=20190521164728","role":"Terror","x":225.22,"y":721.85},{"id":13,"name":"Blood Thirsty","description":"In Terror form move 10% faster when moving towards innocents that are carrying fuses.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/4/4d/Bloodthirsty.png/revision/latest?cb=20190521162729","role":"Terror","x":333.24,"y":721.85},{"id":52,"name":"Blase","description":"When downed, additional votes cast on you increase your respawn time by 4 seconds instead of 5.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/c/cd/Blase.png/revision/latest?cb=20190521162655","role":"Innocent","x":170.62,"y":781.2},{"id":2,"name":"Foresight","description":"Active objectives that are within 15 meters of you are waypointed, even if you didn’t help activate them.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/e/e5/Foresight.png/revision/latest?cb=20190521163205","role":"Innocent","x":279.82,"y":780.01},{"id":6,"name":"Unsung Hero","description":"You will be notified of who took an objective that you’ve activated.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/6/61/Unsunghero.png/revision/latest?cb=20190521164851","role":"Innocent","x":389.02,"y":782.39}],"extras":[],"rowCounts":[1,3,2,1,2,3,2,2,3,2,3,2,3]},"3":{"background":"","items":[{"id":5,"name":"Backstabber","description":"Deal 10% more damage from behind targets.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/5/52/Backstabber.png/revision/latest?cb=20190521162635","role":"Innocent","x":280.46,"y":69.13},{"id":56,"name":"Surprise","description":"Get a burst of movement speed when coming out of a vent.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/9/9c/Surprise.png/revision/latest?cb=20190521164728","role":"Terror","x":225.73,"y":128.62},{"id":13,"name":"Blood Thirsty","description":"In Terror form move 10% faster when moving towards innocents that are carrying fuses.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/4/4d/Bloodthirsty.png/revision/latest?cb=20190521162729","role":"Terror","x":335.2,"y":128.62},{"id":42,"name":"Good Lighting","description":"Cameras are 10% more effective against Terrors.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/4/48/Goodlighting.png/revision/latest?cb=20190521163302","role":"Innocent","x":225.73,"y":186.93},{"id":50,"name":"Triggered","description":"Increased trap trigger and blast radius.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/e/ef/Triggered.png/revision/latest?cb=20190521164804","role":"Innocent","x":335.2,"y":188.12},{"id":19,"name":"Scavenger","description":"You are more likely to find more ammo when picking it up.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/1/18/Scavenger.png/revision/latest?cb=20190521164322","role":"Innocent","x":280.46,"y":246.42},{"id":24,"name":"Bullet Time","description":"Take 25% less damage in Terror form.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/f/f0/Bullettime.png/revision/latest?cb=20190521162922","role":"Terror","x":172.19,"y":307.1},{"id":72,"name":"Impatient","description":"Respawn faster when downed in Terror Form.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/4/4b/Impatient.png/revision/latest?cb=20190521163401","role":"Terror","x":280.46,"y":307.1},{"id":69,"name":"Locked On","description":"Your Terror sense highlights players with fuses that aren’t running.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/0/0e/Lockedon.png/revision/latest?cb=20190521163652","role":"Terror","x":389.93,"y":307.1},{"id":23,"name":"Come Prepared","description":"Spawn with 100% armour.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/a/ac/Comeprepared.png/revision/latest?cb=20190521162937","role":"Innocent","x":225.73,"y":366.6},{"id":43,"name":"Head Start","description":"Each time you respawn you’ll have 25% armour.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/a/a6/Headstart.png/revision/latest?cb=20190521163322","role":"Innocent","x":335.2,"y":366.6},{"id":67,"name":"Appetiser","description":"Start the Game with Half a Slice of Terror Strength.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/c/c0/Appetiser.png/revision/latest?cb=20190521162604","role":"Terror","x":172.19,"y":426.09},{"id":60,"name":"Quiet Quencher","description":"Make less noise when you’re drinking from blood bags.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/c/c1/Quietquencher.png/revision/latest?cb=20190521164230","role":"Terror","x":280.46,"y":426.09},{"id":65,"name":"Acquired Taste","description":"After drinking a blood bag you will briefly be shown other available blood bags.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/d/dc/Acquiredtaste.png/revision/latest?cb=20190521162437","role":"Terror","x":389.93,"y":426.09},{"id":37,"name":"Critical Thinking","description":"Guns deal 25% extra damage when hitting targets in the head.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/f/f3/Criticalthinking.png/revision/latest?cb=20190521162959","role":"Innocent","x":172.19,"y":485.58},{"id":49,"name":"Trust Issues","description":"When you pull a lever it takes 5 seconds before the objective becomes active giving you time to get to it first.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/b/b3/Trustissues.png/revision/latest?cb=20190521164819","role":"Innocent","x":280.46,"y":485.58},{"id":27,"name":"Stubborn","description":"Levers that you’ve activated require more damage to disable.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/8/8d/Stubborn.png/revision/latest?cb=20190521164706","role":"Innocent","x":389.93,"y":485.58},{"id":7,"name":"Frisk","description":"You can see downed people’s items in their nametag.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/d/d3/Frisk.png/revision/latest?cb=20191116224326","role":"Innocent","x":226.92,"y":545.08},{"id":39,"name":"Eye Spy","description":"You can see nametags when close to people in the dark.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/2/27/Eyespy.png/revision/latest?cb=20190521163145","role":"Innocent","x":335.2,"y":545.08},{"id":32,"name":"Fun Sponge","description":"You gain half a slice of Terror strength from each objective you deactivate.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/3/35/Funsponge.png/revision/latest?cb=20190521163244","role":"Terror","x":172.19,"y":604.57},{"id":30,"name":"Every Last Drop","description":"If you respawn in human form you will lose only ½ a slice of Terror strength.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/2/2f/Everylastdrop.png/revision/latest?cb=20190521163114","role":"Terror","x":280.46,"y":604.57},{"id":70,"name":"Rage Refund","description":"Get a slice of Terror strength if someone you executed gets antidoted.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/4/45/Ragerefund.png/revision/latest?cb=20190521164247","role":"Terror","x":389.93,"y":604.57},{"id":1,"name":"Say Cheese","description":"Cameras provide an extra flash.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/2/28/Saycheese.png/revision/latest?cb=20190521164307","role":"Innocent","x":226.92,"y":664.06},{"id":40,"name":"Turbo Trap","description":"Place traps faster.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/3/3a/Turbotrap.png/revision/latest?cb=20190521164834","role":"Innocent","x":335.2,"y":664.06},{"id":57,"name":"Weak Point","description":"There is a 10% chance when damaging a lever that it becomes instantly deactivated.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/f/fc/Weakpoint.png/revision/latest?cb=20190521164940","role":"Terror","x":172.19,"y":723.56},{"id":61,"name":"Slowly does it","description":"Traps require you to be closer to them before they’re triggered.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/9/96/Slowlydoesit.png/revision/latest?cb=20190521164557","role":"Terror","x":280.46,"y":723.56},{"id":66,"name":"Vengeance","description":"After respawning in Terror form you can see the player that downed you for 5 seconds.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/8/85/Vengeance.png/revision/latest?cb=20190521164912","role":"Terror","x":389.93,"y":723.56},{"id":52,"name":"Blase","description":"When downed, additional votes cast on you increase your respawn time by 4 seconds instead of 5.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/c/cd/Blase.png/revision/latest?cb=20190521162655","role":"Innocent","x":225.73,"y":781.86},{"id":54,"name":"Detective","description":"When looking at a taken blood bag you can see when it was drank by an infected.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/7/7f/Detective.png/revision/latest?cb=20190521163017","role":"Innocent","x":335.0,"y":781.46}],"extras":[],"rowCounts":[1,2,2,1,3,2,3,3,2,3,2,3,2]},"4":{"background":"","items":[{"id":5,"name":"Backstabber","description":"Deal 10% more damage from behind targets.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/5/52/Backstabber.png/revision/latest?cb=20190521162635","role":"Innocent","x":286.82,"y":69.0},{"id":67,"name":"Appetiser","description":"Start the Game with Half a Slice of Terror Strength.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/c/c0/Appetiser.png/revision/latest?cb=20190521162604","role":"Terror","x":232.22,"y":128.35},{"id":55,"name":"Mind Your Step","description":"Get an outline on traps when stood near them in human form.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/d/d9/Mindyourstep.png/revision/latest?cb=20190521163749","role":"Terror","x":341.42,"y":128.35},{"id":18,"name":"Evasion","description":"Trackers last 50% less time on you.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/d/d2/Evasion.png/revision/latest?cb=20190521163039","role":"Innocent","x":232.22,"y":187.7},{"id":27,"name":"Stubborn","description":"Levers that you’ve activated require more damage to disable.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/8/8d/Stubborn.png/revision/latest?cb=20190521164706","role":"Innocent","x":341.42,"y":187.7},{"id":48,"name":"Magnetic Mag","description":"Bullets have a 20% chance of returning on hitting a target.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/5/53/Magneticmag.png/revision/latest?cb=20190521163720","role":"Innocent","x":177.61,"y":247.05},{"id":19,"name":"Scavenger","description":"You are more likely to find more ammo when picking it up.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/1/18/Scavenger.png/revision/latest?cb=20190521164322","role":"Innocent","x":286.82,"y":247.05},{"id":43,"name":"Head Start","description":"Each time you respawn you’ll have 25% armour.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/a/a6/Headstart.png/revision/latest?cb=20190521163322","role":"Innocent","x":396.02,"y":247.05},{"id":70,"name":"Rage Refund","description":"Get a slice of Terror strength if someone you executed gets antidoted.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/4/45/Ragerefund.png/revision/latest?cb=20190521164247","role":"Terror","x":232.22,"y":306.4},{"id":72,"name":"Impatient","description":"Respawn faster when downed in Terror Form.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/4/4b/Impatient.png/revision/latest?cb=20190521163401","role":"Terror","x":341.42,"y":306.4},{"id":3,"name":"Bright Eyed","description":"See slightly better in the dark without using light sources.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/3/3a/Brighteyed.png/revision/latest?cb=20190521162901","role":"Innocent","x":177.61,"y":365.75},{"id":40,"name":"Turbo Trap","description":"Place traps faster.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/3/3a/Turbotrap.png/revision/latest?cb=20190521164834","role":"Innocent","x":286.82,"y":365.75},{"id":39,"name":"Eye Spy","description":"You can see nametags when close to people in the dark.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/2/27/Eyespy.png/revision/latest?cb=20190521163145","role":"Innocent","x":396.02,"y":365.75},{"id":61,"name":"Slowly does it","description":"Traps require you to be closer to them before they’re triggered.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/9/96/Slowlydoesit.png/revision/latest?cb=20190521164557","role":"Terror","x":232.22,"y":425.1},{"id":64,"name":"Step Up","description":"Other player’s footsteps are louder to you in Terror form.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/7/7b/Stepup.png/revision/latest?cb=20190521164645","role":"Terror","x":341.42,"y":425.1},{"id":4,"name":"Adrenaline","description":"Move 10% faster in the dark.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/e/e3/Adrenaline.png/revision/latest?cb=20190521162534","role":"Innocent","x":232.22,"y":484.45},{"id":21,"name":"Bounce Back","description":"Regenerate health slowly over time.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/1/1a/Bounceback.png/revision/latest?cb=20190521162814","role":"Innocent","x":341.42,"y":484.45},{"id":7,"name":"Frisk","description":"You can see downed people’s items in their nametag.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/d/d3/Frisk.png/revision/latest?cb=20191116224326","role":"Innocent","x":123.01,"y":543.8},{"id":35,"name":"Skedaddle","description":"Move 35% faster (decaying over 3 seconds) after downing Terrors.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/4/43/Skedaddle.png/revision/latest?cb=20190521164459","role":"Innocent","x":232.22,"y":543.8},{"id":1,"name":"Say Cheese","description":"Cameras provide an extra flash.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/2/28/Saycheese.png/revision/latest?cb=20190521164307","role":"Innocent","x":341.42,"y":543.8},{"id":10,"name":"Second Chance","description":"When antidoting someone, nearby Terrors will become downed.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/0/03/Secondchance.png/revision/latest?cb=20190521164338","role":"Innocent","x":450.62,"y":543.8},{"id":68,"name":"Fully Alert","description":"At full blood when the lights are on you can see the innocents.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/c/c9/Fullyalert.png/revision/latest?cb=20190521163225","role":"Terror","x":232.22,"y":603.15},{"id":29,"name":"Sixth Sense","description":"At night all accessible blood bags are highlighted to you.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/6/60/Sixthsense.png/revision/latest?cb=20190521164442","role":"Terror","x":341.42,"y":603.15},{"id":41,"name":"Sleight of Hand","description":"Reload weapons faster.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/7/78/Sleightofhand.png/revision/latest?cb=20190521164538","role":"Innocent","x":286.82,"y":662.5},{"id":60,"name":"Quiet Quencher","description":"Make less noise when you’re drinking from blood bags.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/c/c1/Quietquencher.png/revision/latest?cb=20190521164230","role":"Terror","x":177.61,"y":721.85},{"id":66,"name":"Vengeance","description":"After respawning in Terror form you can see the player that downed you for 5 seconds.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/8/85/Vengeance.png/revision/latest?cb=20190521164912","role":"Terror","x":286.82,"y":721.85},{"id":59,"name":"Life Leech","description":"Get full Terror health when you execute someone.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/2/20/Lifeleech.png/revision/latest?cb=20190521163613","role":"Terror","x":396.02,"y":721.85},{"id":8,"name":"Interrogate","description":"If you’re involved in a vote that passes there is a chance that you will be told if they were infected. Only one person can be informed per passing vote.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/6/69/Interrogate.png/revision/latest?cb=20190521163459","role":"Innocent","x":232.22,"y":780.01},{"id":2,"name":"Foresight","description":"Active objectives that are within 15 meters of you are waypointed, even if you didn’t help activate them.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/e/e5/Foresight.png/revision/latest?cb=20190521163205","role":"Innocent","x":341.42,"y":782.39}],"extras":[],"rowCounts":[1,2,2,3,2,3,2,2,4,2,1,3,2]},"5":{"background":"","items":[{"id":17,"name":"Slasher","description":"Increased melee damage with the knife.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/9/9a/Slasher.png/revision/latest?cb=20190521164517","role":"Innocent","x":280.08,"y":68.6},{"id":31,"name":"Heightened Senses","description":"Terror sense highlights Innocents every 4 seconds instead of 5.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/3/39/Perk_heightenedsenses.png/revision/latest?cb=20200202162327","role":"Terror","x":225.28,"y":126.98},{"id":66,"name":"Vengeance","description":"After respawning in Terror form you can see the player that downed you for 5 seconds.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/8/85/Vengeance.png/revision/latest?cb=20190521164912","role":"Terror","x":334.88,"y":128.17},{"id":18,"name":"Evasion","description":"Trackers last 50% less time on you.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/d/d2/Evasion.png/revision/latest?cb=20190521163039","role":"Innocent","x":225.28,"y":186.54},{"id":27,"name":"Stubborn","description":"Levers that you’ve activated require more damage to disable.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/8/8d/Stubborn.png/revision/latest?cb=20190521164706","role":"Innocent","x":334.88,"y":186.54},{"id":34,"name":"Escape Artist","description":"It takes 25% less time for the escape door to open if you’re the one to interact with it.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/5/54/Perk_escapeartist.png/revision/latest?cb=20200202162618","role":"Innocent","x":170.48,"y":246.11},{"id":11,"name":"Panic!","description":"15% increased movement speed when in gas and when the exit is open.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/4/4c/Panic.png/revision/latest?cb=20190521163806","role":"Innocent","x":280.08,"y":246.11},{"id":35,"name":"Skedaddle","description":"Move 35% faster (decaying over 3 seconds) after downing Terrors.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/4/43/Skedaddle.png/revision/latest?cb=20190521164459","role":"Innocent","x":389.68,"y":246.11},{"id":32,"name":"Fun Sponge","description":"You gain half a slice of Terror strength from each objective you deactivate.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/3/35/Funsponge.png/revision/latest?cb=20190521163244","role":"Terror","x":225.28,"y":306.86},{"id":30,"name":"Every Last Drop","description":"If you respawn in human form you will lose only ½ a slice of Terror strength.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/2/2f/Everylastdrop.png/revision/latest?cb=20190521163114","role":"Terror","x":334.88,"y":306.86},{"id":40,"name":"Turbo Trap","description":"Place traps faster.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/3/3a/Turbotrap.png/revision/latest?cb=20190521164834","role":"Innocent","x":170.48,"y":365.24},{"id":25,"name":"Tread Lightly","description":"Terrors see your position for less time when they detect your movement.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/5/59/Perk_treadlightly.png/revision/latest?cb=20200202162627","role":"Innocent","x":280.08,"y":365.24},{"id":1,"name":"Say Cheese","description":"Cameras provide an extra flash.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/2/28/Saycheese.png/revision/latest?cb=20190521164307","role":"Innocent","x":389.68,"y":365.24},{"id":61,"name":"Slowly does it","description":"Traps require you to be closer to them before they’re triggered.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/9/96/Slowlydoesit.png/revision/latest?cb=20190521164557","role":"Terror","x":225.28,"y":424.8},{"id":55,"name":"Mind Your Step","description":"Get an outline on traps when stood near them in human form.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/d/d9/Mindyourstep.png/revision/latest?cb=20190521163749","role":"Terror","x":334.88,"y":424.8},{"id":21,"name":"Bounce Back","description":"Regenerate health slowly over time.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/1/1a/Bounceback.png/revision/latest?cb=20190521162814","role":"Innocent","x":225.28,"y":484.37},{"id":37,"name":"Critical Thinking","description":"Guns deal 25% extra damage when hitting targets in the head.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/f/f3/Criticalthinking.png/revision/latest?cb=20190521162959","role":"Innocent","x":334.88,"y":484.37},{"id":48,"name":"Magnetic Mag","description":"Bullets have a 20% chance of returning on hitting a target.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/5/53/Magneticmag.png/revision/latest?cb=20190521163720","role":"Innocent","x":170.48,"y":543.93},{"id":19,"name":"Scavenger","description":"You are more likely to find more ammo when picking it up.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/1/18/Scavenger.png/revision/latest?cb=20190521164322","role":"Innocent","x":280.08,"y":543.93},{"id":41,"name":"Sleight of Hand","description":"Reload weapons faster.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/7/78/Sleightofhand.png/revision/latest?cb=20190521164538","role":"Innocent","x":389.68,"y":543.93},{"id":71,"name":"Last Laugh","description":"When enraged and in Terror form you can see all innocents.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/5/52/Lastlaugh.png/revision/latest?cb=20190521163519","role":"Terror","x":226.47,"y":603.5},{"id":69,"name":"Locked On","description":"Your Terror sense highlights players with fuses that aren’t running.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/0/0e/Lockedon.png/revision/latest?cb=20190521163652","role":"Terror","x":334.88,"y":604.69},{"id":33,"name":"Hoarder","description":"Consumable items on the floor are highlighted from further away.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/f/fe/Hoarder.png/revision/latest?cb=20190521163343","role":"Innocent","x":225.28,"y":663.06},{"id":53,"name":"Please Sir","description":"After completing an objective you will briefly be shown the position of available levers to activate.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/3/3d/Pleasesir.png/revision/latest?cb=20190521164211","role":"Innocent","x":334.88,"y":663.06},{"id":59,"name":"Life Leech","description":"Get full Terror health when you execute someone.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/2/20/Lifeleech.png/revision/latest?cb=20190521163613","role":"Terror","x":170.48,"y":722.63},{"id":14,"name":"Stealth","description":"Transform in and out of Terror form quieter.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/1/19/Stealth.png/revision/latest?cb=20190521164615","role":"Terror","x":280.08,"y":722.63},{"id":64,"name":"Step Up","description":"Other player’s footsteps are louder to you in Terror form.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/7/7b/Stepup.png/revision/latest?cb=20190521164645","role":"Terror","x":389.68,"y":723.82},{"id":2,"name":"Foresight","description":"Active objectives that are within 15 meters of you are waypointed, even if you didn’t help activate them.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/e/e5/Foresight.png/revision/latest?cb=20190521163205","role":"Innocent","x":226.47,"y":782.19},{"id":54,"name":"Detective","description":"When looking at a taken blood bag you can see when it was drank by an infected.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/7/7f/Detective.png/revision/latest?cb=20190521163017","role":"Innocent","x":334.88,"y":782.19}],"extras":[],"rowCounts":[1,2,2,3,2,3,2,2,3,2,2,3,2]},"6":{"background":"","items":[{"id":39,"name":"Eye Spy","description":"You can see nametags when close to people in the dark.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/2/27/Eyespy.png/revision/latest?cb=20190521163145","role":"Innocent","x":280.64,"y":68.87},{"id":55,"name":"Mind Your Step","description":"Get an outline on traps when stood near them in human form.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/d/d9/Mindyourstep.png/revision/latest?cb=20190521163749","role":"Terror","x":225.97,"y":128.29},{"id":61,"name":"Slowly does it","description":"Traps require you to be closer to them before they’re triggered.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/9/96/Slowlydoesit.png/revision/latest?cb=20190521164557","role":"Terror","x":335.31,"y":128.29},{"id":4,"name":"Adrenaline","description":"Move 10% faster in the dark.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/e/e3/Adrenaline.png/revision/latest?cb=20190521162534","role":"Innocent","x":225.97,"y":187.71},{"id":42,"name":"Good Lighting","description":"Cameras are 10% more effective against Terrors.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/4/48/Goodlighting.png/revision/latest?cb=20190521163302","role":"Innocent","x":335.31,"y":187.71},{"id":73,"name":"Solar Powered","description":"Torches slowly recharge when the lights are on.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/5/51/Solarpowered.png/revision/latest?cb=20200305140006","role":"Innocent","x":171.31,"y":247.13},{"id":26,"name":"Surveillance","description":"If you revive someone you can see their position for 15 seconds.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/f/f7/Surveillance.png/revision/latest?cb=20190521164743","role":"Innocent","x":280.64,"y":247.13},{"id":1,"name":"Say Cheese","description":"Cameras provide an extra flash.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/2/28/Saycheese.png/revision/latest?cb=20190521164307","role":"Innocent","x":389.98,"y":247.13},{"id":70,"name":"Rage Refund","description":"Get a slice of Terror strength if someone you executed gets antidoted.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/4/45/Ragerefund.png/revision/latest?cb=20190521164247","role":"Terror","x":225.97,"y":306.55},{"id":24,"name":"Bullet Time","description":"Take 25% less damage in Terror form.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/f/f0/Bullettime.png/revision/latest?cb=20190521162922","role":"Terror","x":335.31,"y":306.55},{"id":74,"name":"Speedy Recovery","description":"Health packs also instantly heal for 25 upon pickup.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/7/70/Speedyrecovery.png/revision/latest?cb=20200305140020","role":"Innocent","x":225.97,"y":365.97},{"id":43,"name":"Head Start","description":"Each time you respawn you’ll have 25% armour.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/a/a6/Headstart.png/revision/latest?cb=20190521163322","role":"Innocent","x":335.31,"y":365.97},{"id":67,"name":"Appetiser","description":"Start the Game with Half a Slice of Terror Strength.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/c/c0/Appetiser.png/revision/latest?cb=20190521162604","role":"Terror","x":171.31,"y":425.4},{"id":77,"name":"Revitalised","description":"Gain half a slice of blood when revived by an innocent player.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/3/3c/Revitalised.png/revision/latest?cb=20200305135959","role":"Terror","x":280.64,"y":425.4},{"id":65,"name":"Acquired Taste","description":"After drinking a blood bag you will briefly be shown other available blood bags.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/d/dc/Acquiredtaste.png/revision/latest?cb=20190521162437","role":"Terror","x":389.98,"y":425.4},{"id":75,"name":"Spotting","description":"Trackers can now be placed on blood bags, showing an outline of the blood bag's state. This tracker displays only to you and is destroyed upon taking damage.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/f/f4/Spotting.png/revision/latest?cb=20200305140030","role":"Innocent","x":225.97,"y":484.82},{"id":76,"name":"Redistribution","description":"You're able to pick your traps back up again.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/b/b0/Redistribution.png/revision/latest?cb=20200305140039","role":"Innocent","x":335.31,"y":484.82},{"id":38,"name":"Loaded","description":"Start with a full ammo clip in your pistol.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/2/2b/Loaded.png/revision/latest?cb=20190521163630","role":"Innocent","x":171.31,"y":544.24},{"id":48,"name":"Magnetic Mag","description":"Bullets have a 20% chance of returning on hitting a target.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/5/53/Magneticmag.png/revision/latest?cb=20190521163720","role":"Innocent","x":280.64,"y":544.24},{"id":19,"name":"Scavenger","description":"You are more likely to find more ammo when picking it up.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/1/18/Scavenger.png/revision/latest?cb=20190521164322","role":"Innocent","x":389.98,"y":544.24},{"id":72,"name":"Impatient","description":"Respawn faster when downed in Terror Form.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/4/4b/Impatient.png/revision/latest?cb=20190521163401","role":"Terror","x":225.97,"y":603.66},{"id":29,"name":"Sixth Sense","description":"At night all accessible blood bags are highlighted to you.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/6/60/Sixthsense.png/revision/latest?cb=20190521164442","role":"Terror","x":335.31,"y":603.66},{"id":17,"name":"Slasher","description":"Increased melee damage with the knife.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/9/9a/Slasher.png/revision/latest?cb=20190521164517","role":"Innocent","x":225.97,"y":663.08},{"id":5,"name":"Backstabber","description":"Deal 10% more damage from behind targets.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/5/52/Backstabber.png/revision/latest?cb=20190521162635","role":"Innocent","x":335.31,"y":663.08},{"id":66,"name":"Vengeance","description":"After respawning in Terror form you can see the player that downed you for 5 seconds.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/8/85/Vengeance.png/revision/latest?cb=20190521164912","role":"Terror","x":171.31,"y":722.5},{"id":60,"name":"Quiet Quencher","description":"Make less noise when you’re drinking from blood bags.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/c/c1/Quietquencher.png/revision/latest?cb=20190521164230","role":"Terror","x":280.64,"y":722.5},{"id":13,"name":"Blood Thirsty","description":"In Terror form move 10% faster when moving towards innocents that are carrying fuses.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/4/4d/Bloodthirsty.png/revision/latest?cb=20190521162729","role":"Terror","x":389.98,"y":722.5},{"id":2,"name":"Foresight","description":"Active objectives that are within 15 meters of you are waypointed, even if you didn’t help activate them.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/e/e5/Foresight.png/revision/latest?cb=20190521163205","role":"Innocent","x":225.97,"y":781.93},{"id":6,"name":"Unsung Hero","description":"You will be notified of who took an objective that you’ve activated.","icon":"https://static.wikia.nocookie.net/deceit_gamepedia_en/images/6/61/Unsunghero.png/revision/latest?cb=20190521164851","role":"Innocent","x":335.31,"y":781.93}],"extras":[],"rowCounts":[1,2,2,3,2,2,3,2,3,2,2,3,2]}};
+
+const stage = document.getElementById('treeStage');
+const tooltip = document.getElementById('tooltip');
+const tipName = document.getElementById('tipName');
+const tipRole = document.getElementById('tipRole');
+const tipDesc = document.getElementById('tipDesc');
+const tipId = document.getElementById('tipId');
+let currentTree = 2;
+let activeNode = null;
+
+// ================================================================
+// ROTATION AUTOMATIQUE DES PERK TREES
+// Référence MongoDB : 24/08/2026 05:00 UTC = ID3
+// Rotation : 2 → 3 → 6 → 0 → 5 → 1 → 4 → 2 ...
+// Période : 14 jours
+// ================================================================
+const ROTATION_ORDER = [2, 3, 6, 0, 5, 1, 4];
+const ROTATION_ANCHOR_TREE = 3;
+const ROTATION_ANCHOR_UTC = Date.parse('2026-08-24T05:00:00.000Z');
+const ROTATION_PERIOD_MS = 14 * 24 * 60 * 60 * 1000;
+
+const activeTreeLabel = document.getElementById('activeTreeLabel');
+const selectedTreeSchedule = document.getElementById('selectedTreeSchedule');
+const rotationCountdown = document.getElementById('rotationCountdown');
+
+function positiveMod(n, m) {
+  return ((n % m) + m) % m;
+}
+
+function getRotationState(nowMs = Date.now()) {
+  const anchorIndex = ROTATION_ORDER.indexOf(ROTATION_ANCHOR_TREE);
+
+  // The page is intended for the 2026+ schedule, but keeping this
+  // calculation reversible also makes historical dates deterministic.
+  const cycle = Math.floor((nowMs - ROTATION_ANCHOR_UTC) / ROTATION_PERIOD_MS);
+  const activeIndex = positiveMod(anchorIndex + cycle, ROTATION_ORDER.length);
+  const activeTree = ROTATION_ORDER[activeIndex];
+  const activeSince = ROTATION_ANCHOR_UTC + cycle * ROTATION_PERIOD_MS;
+  const nextChange = activeSince + ROTATION_PERIOD_MS;
+
+  return { cycle, activeIndex, activeTree, activeSince, nextChange };
+}
+
+function nextActivationForTree(treeId, nowMs = Date.now()) {
+  const state = getRotationState(nowMs);
+
+  // If the selected tree is active now, return its next future
+  // occurrence after the current active period (one full 7-tree cycle).
+  if (treeId === state.activeTree) {
+    return state.activeSince + ROTATION_PERIOD_MS * ROTATION_ORDER.length;
+  }
+
+  for (let steps = 1; steps <= ROTATION_ORDER.length; steps++) {
+    const index = (state.activeIndex + steps) % ROTATION_ORDER.length;
+    if (ROTATION_ORDER[index] === treeId) {
+      return state.activeSince + steps * ROTATION_PERIOD_MS;
+    }
+  }
+
+  return null;
+}
+
+function formatLocalDateTime(timestamp) {
+  const d = new Date(timestamp);
+  return new Intl.DateTimeFormat(undefined, {
+    day:'2-digit',
+    month:'2-digit',
+    year:'numeric',
+    hour:'2-digit',
+    minute:'2-digit',
+    second:'2-digit'
+  }).format(d);
+}
+
+function formatCountdown(ms) {
+  if (ms <= 0) return '00j 00h 00m 00s';
+
+  const totalSeconds = Math.floor(ms / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const pad = n => String(n).padStart(2, '0');
+  return `${days}j ${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`;
+}
+
+function updateRotationDisplay() {
+  const now = Date.now();
+  const state = getRotationState(now);
+
+  activeTreeLabel.textContent = `ID${state.activeTree}`;
+
+  document.querySelectorAll('.tree-tab').forEach(btn => {
+    const id = Number(btn.dataset.tree);
+    btn.classList.toggle('live-tree', id === state.activeTree);
+  });
+
+  if (currentTree === state.activeTree) {
+    selectedTreeSchedule.textContent =
+      `ID${currentTree} est actif · prochain changement : ${formatLocalDateTime(state.nextChange)}`;
+    rotationCountdown.textContent =
+      `(${formatCountdown(state.nextChange - now)})`;
+  } else {
+    const nextActivation = nextActivationForTree(currentTree, now);
+    selectedTreeSchedule.textContent =
+      `ID${currentTree} : ${formatLocalDateTime(nextActivation)}`;
+    rotationCountdown.textContent =
+      `(${formatCountdown(nextActivation - now)})`;
+  }
+}
+
+
+function escapeHtml(s) {
+  return String(s)
+    .replaceAll('&','&amp;').replaceAll('<','&lt;')
+    .replaceAll('>','&gt;').replaceAll('"','&quot;');
+}
+
+function renderTree(id) {
+  currentTree = Number(id);
+  const tree = TREES[String(currentTree)];
+  document.querySelectorAll('.tree-tab').forEach(btn => {
+    btn.classList.toggle('active', Number(btn.dataset.tree) === currentTree);
+  });
+
+  updateRotationDisplay();
+
+  stage.innerHTML = '';
+  stage.style.backgroundImage = 'none';
+
+  // Liaisons vectorielles propres : plus aucun fond raster, aucun cadre,
+  // aucun artefact. Les lignes sont calculées à partir de la géométrie
+  // réelle des cercles de chaque arbre.
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS, 'svg');
+  svg.classList.add('tree-links');
+  svg.setAttribute('viewBox', '0 0 560 850');
+  svg.setAttribute('aria-hidden', 'true');
+
+  // Regrouper les perks par rangée.
+  const rows = [];
+  [...tree.items]
+    .sort((a,b) => a.y - b.y || a.x - b.x)
+    .forEach(item => {
+      let row = rows.find(r => Math.abs(r.y - item.y) < 12);
+      if (!row) {
+        row = { y:item.y, items:[] };
+        rows.push(row);
+      }
+      row.items.push(item);
+      row.y = row.items.reduce((s,p) => s + p.y, 0) / row.items.length;
+    });
+  rows.sort((a,b) => a.y - b.y);
+  rows.forEach(r => r.items.sort((a,b) => a.x - b.x));
+
+  // Deux cercles de rangées voisines sont reliés lorsqu'ils sont
+  // verticalement alignés ou voisins immédiats. Cela reproduit le
+  // maillage des arbres sans récupérer le bruit graphique des captures.
+  const MAX_DX = 118;
+
+  for (let r = 0; r < rows.length - 1; r++) {
+    const upper = rows[r].items;
+    const lower = rows[r + 1].items;
+    const connected = new Set();
+
+    upper.forEach((a, ai) => {
+      lower.forEach((b, bi) => {
+        if (Math.abs(a.x - b.x) <= MAX_DX) {
+          const line = document.createElementNS(svgNS, 'line');
+          line.setAttribute('x1', a.x);
+          line.setAttribute('y1', a.y);
+          line.setAttribute('x2', b.x);
+          line.setAttribute('y2', b.y);
+          svg.appendChild(line);
+          connected.add('u' + ai);
+          connected.add('l' + bi);
+        }
+      });
+    });
+
+    // Sécurité : aucun cercle ne doit rester isolé de la rangée voisine.
+    upper.forEach((a, ai) => {
+      if (!connected.has('u' + ai)) {
+        const b = lower.reduce((best, p) =>
+          Math.abs(p.x-a.x) < Math.abs(best.x-a.x) ? p : best, lower[0]);
+        const line = document.createElementNS(svgNS, 'line');
+        line.setAttribute('x1', a.x);
+        line.setAttribute('y1', a.y);
+        line.setAttribute('x2', b.x);
+        line.setAttribute('y2', b.y);
+        svg.appendChild(line);
+      }
+    });
+
+    lower.forEach((b, bi) => {
+      if (!connected.has('l' + bi)) {
+        const a = upper.reduce((best, p) =>
+          Math.abs(p.x-b.x) < Math.abs(best.x-b.x) ? p : best, upper[0]);
+        const line = document.createElementNS(svgNS, 'line');
+        line.setAttribute('x1', a.x);
+        line.setAttribute('y1', a.y);
+        line.setAttribute('x2', b.x);
+        line.setAttribute('y2', b.y);
+        svg.appendChild(line);
+      }
+    });
+  }
+
+  stage.appendChild(svg);
+
+  tree.items.forEach(perk => {
+    const node = document.createElement('button');
+    node.type = 'button';
+    node.className = 'perk-node ' + (perk.role === 'Terror' ? 'terror' : 'innocent');
+    node.style.left = perk.x + 'px';
+    node.style.top = perk.y + 'px';
+    node.dataset.id = perk.id;
+    node.dataset.name = perk.name;
+    node.dataset.role = perk.role;
+    node.dataset.description = perk.description;
+    node.setAttribute('aria-label', `${perk.name} — ${perk.description}`);
+
+    const img = document.createElement('img');
+    if (perk.icon) {
+      img.src = perk.icon;
+      img.alt = perk.name;
+      img.referrerPolicy = 'no-referrer';
+    }
+    const fallback = document.createElement('span');
+    fallback.className = 'fallback';
+    fallback.textContent = perk.id;
+
+    img.addEventListener('error', () => {
+      img.style.display = 'none';
+      fallback.style.display = 'flex';
+    });
+
+    const badge = document.createElement('span');
+    badge.className = 'perk-id';
+    badge.textContent = perk.id;
+
+    node.append(img, fallback, badge);
+
+    node.addEventListener('mouseenter', e => showTooltip(e, node));
+    node.addEventListener('mousemove', e => moveTooltip(e));
+    node.addEventListener('mouseleave', hideTooltip);
+    node.addEventListener('focus', e => {
+      const r = node.getBoundingClientRect();
+      showTooltip({clientX:r.right + 8, clientY:r.top + r.height/2}, node);
+    });
+    node.addEventListener('blur', hideTooltip);
+
+    stage.appendChild(node);
+  });
+
+}
+
+function showTooltip(e, node) {
+  activeNode = node;
+  const terror = node.dataset.role === 'Terror';
+  tooltip.classList.toggle('terror', terror);
+  tipName.textContent = node.dataset.name;
+  tipRole.textContent = node.dataset.role;
+  tipDesc.textContent = node.dataset.description;
+  tipId.textContent = 'ID ' + node.dataset.id;
+  tooltip.classList.add('visible');
+  moveTooltip(e);
+}
+
+function moveTooltip(e) {
+  if (!tooltip.classList.contains('visible')) return;
+  const gap = 18;
+  const tw = 310;
+  const th = tooltip.offsetHeight || 120;
+  let x = e.clientX + gap;
+  let y = e.clientY + gap;
+  if (x + tw > window.innerWidth - 12) x = e.clientX - tw - gap;
+  if (y + th > window.innerHeight - 12) y = window.innerHeight - th - 12;
+  if (y < 12) y = 12;
+  tooltip.style.left = x + 'px';
+  tooltip.style.top = y + 'px';
+}
+
+function hideTooltip() {
+  activeNode = null;
+  tooltip.classList.remove('visible');
+}
+
+document.querySelectorAll('.tree-tab').forEach(btn => {
+  btn.addEventListener('click', () => renderTree(btn.dataset.tree));
+});
+
+const TREE_ORDER = [2, 3, 6, 0, 5, 1, 4];
+
+document.addEventListener('keydown', e => {
+  const idx = TREE_ORDER.indexOf(currentTree);
+
+  if (e.key === 'ArrowRight') {
+    const next = TREE_ORDER[(idx + 1) % TREE_ORDER.length];
+    renderTree(next);
+  } else if (e.key === 'ArrowLeft') {
+    const prev = TREE_ORDER[(idx - 1 + TREE_ORDER.length) % TREE_ORDER.length];
+    renderTree(prev);
+  }
+});
+
+renderTree(2);
+updateRotationDisplay();
+setInterval(updateRotationDisplay, 1000);
+</script>
+</body>
+</html>
