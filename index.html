@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Deceit — Perk Tree</title>
+<link rel="icon" type="image/png" href="https://raw.githubusercontent.com/lightyorugami/legacylauncher-help/refs/heads/main/icon.png">
+<title>Legacy Launcher | Perk Tree</title>
 <style>
 :root {
   --bg:#060b0e;
@@ -782,7 +783,7 @@ document.addEventListener('keydown', e => {
   }
 });
 
-renderTree(2);
+renderTree(getRotationState().activeTree);
 updateRotationDisplay();
 setInterval(updateRotationDisplay, 1000);
 </script>
