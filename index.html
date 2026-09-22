@@ -49,6 +49,8 @@ body {
   padding:18px 28px 18px;
 }
 .topbar {
+  position:relative;
+  top:9px;
   display:flex;
   /* Align the title with the ID selection bar, not with the status below. */
   align-items:flex-start;
@@ -390,7 +392,7 @@ body {
   width:min(340px, calc(100vw - 28px));
   min-height:132px;
   padding:10px 13px 15px;
-  border:2px solid rgba(145,176,181,.90);
+  border:2px solid #829193;
   border-radius:9px;
   background:linear-gradient(180deg,rgba(60,65,68,.96),rgba(47,52,56,.96));
   box-shadow:
@@ -414,24 +416,23 @@ body {
   clip-path:polygon(0 50%, 100% 0, 100% 100%);
 }
 .tooltip::before {
-  left:-15px;
-  width:15px;
-  height:19px;
-  background:#a0c0c5;
-  filter:drop-shadow(0 0 3px rgba(167,217,224,.55));
+  left:-11px;
+  width:11px;
+  height:14px;
+  background:#829193;
 }
 .tooltip::after {
-  left:-11px;
-  width:13px;
-  height:15px;
+  left:-7px;
+  width:9px;
+  height:10px;
   background:#383e42;
 }
 .tooltip.arrow-right::before,
 .tooltip.arrow-right::after {
   clip-path:polygon(100% 50%, 0 0, 0 100%);
 }
-.tooltip.arrow-right::before {left:auto;right:-15px;}
-.tooltip.arrow-right::after {left:auto;right:-11px;}
+.tooltip.arrow-right::before {left:auto;right:-11px;}
+.tooltip.arrow-right::after {left:auto;right:-7px;}
 .tooltip.arrow-none::before,.tooltip.arrow-none::after {display:none;}
 .tooltip.visible {opacity:1;visibility:visible;}
 .tip-head {margin:0 0 4px;}
@@ -666,6 +667,18 @@ function escapeHtml(s) {
 function renderTree(id) {
   currentTree = Number(id);
   const tree = TREES[String(currentTree)];
+
+  // Keep the first (topmost) perk at exactly the same on-screen position
+  // in every tree; shift its connected nodes and lines together.
+  const FIRST_PERK_POSITION = { x:280, y:69 };
+  const firstPerk = tree.items.reduce((top, perk) =>
+    perk.y < top.y ? perk : top, tree.items[0]);
+  const dx = FIRST_PERK_POSITION.x - firstPerk.x;
+  const dy = FIRST_PERK_POSITION.y - firstPerk.y;
+  const positionedItems = tree.items.map(perk => ({
+    ...perk, x:perk.x + dx, y:perk.y + dy
+  }));
+
   document.querySelectorAll('.tree-tab').forEach(btn => {
     btn.classList.toggle('active', Number(btn.dataset.tree) === currentTree);
   });
@@ -686,7 +699,7 @@ function renderTree(id) {
 
   // Regrouper les perks par rangée.
   const rows = [];
-  [...tree.items]
+  [...positionedItems]
     .sort((a,b) => a.y - b.y || a.x - b.x)
     .forEach(item => {
       let row = rows.find(r => Math.abs(r.y - item.y) < 12);
@@ -755,7 +768,7 @@ function renderTree(id) {
 
   stage.appendChild(svg);
 
-  tree.items.forEach(perk => {
+  positionedItems.forEach(perk => {
     const node = document.createElement('button');
     node.type = 'button';
     node.className = 'perk-node ' + (perk.role === 'Terror' ? 'terror' : 'innocent');
@@ -815,7 +828,7 @@ function showTooltip(node) {
 function positionTooltip(node) {
   if (!node) return;
   const rect = node.getBoundingClientRect();
-  const gap = 17;
+  const gap = 13;
   const margin = 14;
   const maxWidth = 340;
   const roomRight = window.innerWidth - rect.right - gap - margin;
